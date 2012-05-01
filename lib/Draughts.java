@@ -1,34 +1,13 @@
-draughts
-========
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class Draughts {
     
     public static void main(String[] args) {
 
-//        DraughtsBoard board = new DraughtsBoard();
-//
-//        Piece black1 = new Piece(Colour.BLACK, board);
-//        Piece black2 = new Piece(Colour.BLACK, board);
-//        Piece white1 = new Piece(Colour.WHITE, board);
-//        Piece white2 = new Piece(Colour.WHITE, board);
-//        Piece white3 = new Piece(Colour.WHITE, board);
-//
-//
-//        board.getSquare(2, 0).setPiece(black1);
-//        board.getSquare(2, 2).setPiece(black2);
-//        board.getSquare(3, 1).setPiece(white1);
-//        board.getSquare(3, 3).setPiece(white2);
-//        board.getSquare(5, 5).setPiece(white3);
-//
-//        Player black = new Player(board, Colour.BLACK);
-//        System.err.println(black.move());
-//        black.move().take();
-//
-//        System.err.println(black.move());
-//
-//
-//        System.err.println(board);
-
-        
 
         DraughtsBoard board = new DraughtsBoard().initGame();
 
