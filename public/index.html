@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draughts</title>
+    <script type="application/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="application/javascript" src="js/json2.js"></script>
+    <script type="application/javascript" src="js/underscore-min.js"></script>
+    <script type="application/javascript" src="js/backbone.js"></script>
+    <script type="application/javascript" src="js/app.js"></script>
+    <style type="text/css">
+        body {
+            font-family: 'Arial'
+        }
+        div#main {
+            margin-left: 30%;
+        }
+
+        div#board {
+            height: 16em;
+            width: 16em;
+            background-color: #363636;
+            padding: 0.2em;
+            border: 5px solid #363636;
+        }
+
+        div.row {
+            clear:both;
+        }
+
+        div.square {
+            float:left;
+            height: 2em;
+            width: 2em;
+        }
+        div.square.black {
+            background-color: black;
+        }
+        div.square.white {
+            background-color: #f5f5dc;
+        }
+
+        div.piece {
+            border-radius: 0.9em;
+            -moz-border-radius: 0.9em;
+            -webkit-border-radius: 0.9em;
+            width: 1.8em;
+            height: 1.8em;
+            margin-left: 0.1em;
+            margin-top: 0.1em;
+        }
+
+        div.piece:hover {
+            background-color:blue;
+        }
+
+        div.piece.black {
+            background-color: red;
+        }
+
+        div.piece.white {
+            background-color: #f5f5f5;
+        }
+
+    </style>
+</head>
+<body>
+<div id="main">
+    <h1>Draughts</h1>
+    <div id="board" class="board">
+    </div>
+</div>
+</body>
+</html>

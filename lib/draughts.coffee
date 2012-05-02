@@ -1,5 +1,10 @@
-class Colour
+class KeyType
+  id : 0
+  constructor: ->
+    @id = ++KeyType::id
+  toString: -> @id
 
+class Colour
   BLACK : new Colour("BLACK")
   WHITE : new Colour("WHITE")
 
@@ -13,7 +18,7 @@ class Colour
 black = Colour::BLACK
 white = Colour::WHITE
 
-class Piece
+class Piece extends KeyType
   constructor: (@colour, @board) ->
     deltaI = if @colour is black then -1 else 1
     @vectors = [[deltaI, -1], [deltaI, 1]]
@@ -75,7 +80,8 @@ class DraughtsBoard
       for square in row
         piece = square.piece
         name = piece?.colour.name.substr(0, 1)
-        ret = "#{ret}|#{ if piece? then name.toLowerCase() else (if square.color == black then '*' else ' ')}"
+        name = name.toLowerCase() if piece?.value is 1
+        ret = "#{ret}|#{ if piece? then name else (if square.color == black then '*' else ' ')}"
       ret = "#{ret}|\n#{rowSeparator}\n"
     ret
 
@@ -111,7 +117,7 @@ class ComputerPlayer
   pickMove: (pieces, opponentPieces, colour, depth, hopping, score) ->
 
     bestMove = null
-    for piece in pieces
+    for piece in pieces when piece?.square?
 
       continue if @takenPieces[piece]?
       fromSquare = piece.square
@@ -119,9 +125,6 @@ class ComputerPlayer
       for vector in piece.vectors
 
         current = null
-        if fromSquare == null
-          foo = 'foo'
-          alert('here')
 
         toSquare = @board.getSquare(fromSquare.row + vector[0], fromSquare.col + vector[1])
 
@@ -129,22 +132,25 @@ class ComputerPlayer
 
         if not toSquare.isEmpty()
 
-          jumpTo = board.getSquare(toSquare.row + vector[0], toSquare.col + vector[1])
+          jumpTo = @board.getSquare(toSquare.row + vector[0], toSquare.col + vector[1])
           continue if not jumpTo? or not jumpTo.isEmpty()
 
           takenPiece = toSquare.piece
           @takenPieces[takenPiece] = true
+          toSquare.piece = null
+          takenPiece.square = null
+          piece.move(jumpTo)
 
-          piece.take(takenPiece, jumpTo)
+#          piece.take(takenPiece, jumpTo)
 
           if piece.isKinged()
             current = new Move(piece, fromSquare, toSquare, jumpTo, colour, score + takenPiece.value)
             if depth < @depth
-              counterMove = @pickMove(@board.pieces[colour.flip()], board.pieces[colour],
+              counterMove = @pickMove(@board.pieces[colour.flip()], @board.pieces[colour],
                 colour.flip(), depth + 1, false, 0)
               current.score -= counterMove.score if counterMove?
           else
-            current = @pickMove([piece], opponentPieces, colour, depth, true, score + takenPiece.value)
+            current = @pickMove([piece], opponentPieces, colour.flip(), depth, true, score + takenPiece.value)
             (current = new Move(piece, fromSquare, jumpTo, score + takenPiece.value)) unless current?
 
           if current.hops.length is 0
@@ -167,12 +173,12 @@ class ComputerPlayer
 
             piece.move(toSquare)
 
-            counterMove = @pickMove(@board.pieces[colour.flip()], @board.pieces[colour], colour, depth + 1, false, 0)
+            counterMove = @pickMove(@board.pieces[colour.flip()], @board.pieces[colour], colour.flip(), depth + 1, false, 0)
             current.score -= counterMove.score if counterMove?
 
             piece.move(fromSquare)
 
-      bestMove = current if current?.betterThan(bestMove)
+        bestMove = current if current?.betterThan(bestMove)
 
     bestMove
 
@@ -201,16 +207,19 @@ class Move
   betterThan: (move)->
     not move? or move.score < @score
 
+api =
+  Colour: Colour
+  KeyType : KeyType
+  Piece : Piece,
+  King : King,
+  Square :Square,
+  DraughtsBoard : DraughtsBoard,
+  ComputerPlayer : ComputerPlayer,
+  Move : Move
 
-board = new DraughtsBoard().initGame()
-white = new ComputerPlayer(board, white)
-black = new ComputerPlayer(board, black)
-
-
-for i in [1..10]
-  white.move().take()
-  black.move().take()
-
-console.log board.toString()
+if exports?
+  module.exports = api
+else
+  window.Draughts = api
 
 
