@@ -23,7 +23,7 @@ class Piece extends KeyType
     super()
     deltaI = if @colour is black then -1 else 1
     @vectors = [[deltaI, -1], [deltaI, 1]]
-    @board.pieces[@colour].push(@)
+    @board.addPiece(@)
     @value = 1
 
   isKinged: ->
@@ -89,6 +89,12 @@ class DraughtsBoard
 
   getSquare: (i,j) ->
     if @squares[i]? then @squares[i][j]
+
+  addPiece: (piece) ->
+    @pieces[piece.colour].push(piece)
+    if @publish and @listener
+      @listener.addPiece(piece)
+
 
   removePiece: (piece) ->
     piece.square.piece = null if piece.square?

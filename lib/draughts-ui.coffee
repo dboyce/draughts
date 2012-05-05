@@ -37,29 +37,27 @@ $(document).ready ->
     move: (piece, to) ->
       @pieceViews[piece].move(to)
 
-    populate: ->
-      try
-        @board.publish = false
-        @board.initGame()
-        @add(square:square,board:@) for square in row for row in [].concat(@board.squares).reverse()
-        for piece in [].concat(@board.pieces[white],@board.pieces[black]) when piece.square?
-         pieceView = new PieceView(model:new PieceModel(piece:piece),appView:@appView)
-         pieceView.move(piece.square)
-         @pieceViews[piece] = pieceView
-      finally
-        @board.publish = true
+    addPiece: (piece) ->
+      @pieceViews[piece] =  new PieceView(model:new PieceModel(piece:piece),appView:@appView)
 
+    populate: ->
+
+      @add(square:square,board:@) for square in row for row in [].concat(@board.squares).reverse()
+      @board.initGame()
 
   class PieceView extends Backbone.View
 
     tagName: 'div'
 
     attributes: ->
-      "class" : "piece #{@model.piece.colour.name.toLowerCase()}"
+      "class" : "piece #{@model.piece.colour.name.toLowerCase()} #{if @king then 'king' else ''}"
 
     initialize: ->
       @piece = @model.piece
       @appView = @options.appView
+      @king = @piece instanceof King
+      if @king
+        $(@el).append("<div class='king'>K</div>")
 
     remove: ->
       $(@el).remove()
