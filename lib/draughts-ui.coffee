@@ -1,5 +1,11 @@
 $(document).ready ->
 
+  class PieceModel extends Backbone.Model
+
+    initialize: ->
+      @piece = @get('piece')
+
+
   class SquareModel extends Backbone.Model
 
     initialize: ->
@@ -22,13 +28,46 @@ $(document).ready ->
     initialize: ->
       @board = new DraughtsBoard()
       @squareModels = {}
+      @board.listener = @
+      @pieceViews = {}
+
+    remove: (piece) ->
+      @pieceViews[piece].remove()
+
+    move: (piece, to) ->
+      @pieceViews[piece].move(to)
 
     populate: ->
-      @board.initGame()
-      @add(square:square,board:@) for square in row for row in [].concat(@board.squares).reverse()
+      try
+        @board.publish = false
+        @board.initGame()
+        @add(square:square,board:@) for square in row for row in [].concat(@board.squares).reverse()
+        for piece in [].concat(@board.pieces[white],@board.pieces[black]) when piece.square?
+         pieceView = new PieceView(model:new PieceModel(piece:piece),appView:@appView)
+         pieceView.move(piece.square)
+         @pieceViews[piece] = pieceView
+      finally
+        @board.publish = true
 
-    getSquareView: (row,col) ->
-      @appView.getSquareView(row,col)
+
+  class PieceView extends Backbone.View
+
+    tagName: 'div'
+
+    attributes: ->
+      "class" : "piece #{@model.piece.colour.name.toLowerCase()}"
+
+    initialize: ->
+      @piece = @model.piece
+      @appView = @options.appView
+
+    remove: ->
+      $(@el).remove()
+
+    move: (square) ->
+      $(@el).detach()
+      @square = square
+      @appView.getSquareView(@square.row ,@square.col).setPiece(@)
 
   class SquareView extends Backbone.View
     tagName: "div"
@@ -36,32 +75,11 @@ $(document).ready ->
     attributes: ->
       "class" : "square #{@model.square.colour.name.toLowerCase()}"
 
-    events:
-      "mousedown" : "showMoves",
-      "mouseup" : "unShowMoves"
-
-    showMoves: ->
-      unless @model.square.isEmpty()
-        @highlighted = @model.getTargetSquares()
-        square.highlight() for square in @highlighted
-
-
-    unShowMoves: ->
-      if @highlighted?
-        square.unhighlight() for square in @highlighted
-        @highlighted = null
-
-    highlight: ->
-      $(@el).addClass('highlighted')
-
-    unhighlight: ->
-      $(@el).removeClass('highlighted')
+    setPiece: (piece) ->
+      $(@el).children().remove()
+      $(@el).append(piece.el)
 
     render: ->
-      unless @model.square.isEmpty()
-        $(@el).html("<div class='piece #{@model.square.piece.colour.name.toLowerCase()}'></div>")
-      else
-        $(@el).html('')
       @
 
   class AppView extends Backbone.View
@@ -75,9 +93,10 @@ $(document).ready ->
       @el = $('div#board')
       @squareViews = {}
       @board = new BoardModel()
+      @board.appView = @
       @board.bind('add', this.addSquare)
       @board.populate()
-      @board.appView = @
+
 
     addSquare: (model) =>
       @row = $("<div class='row'></div>").appendTo($(@el)) if @squareCount++ % 8 is 0
@@ -95,6 +114,18 @@ $(document).ready ->
       @squareViews[row]?[col]
 
 
+  appView = new AppView()
+  player = new ComputerPlayer(appView.board.board, white)
+  player2 = new ComputerPlayer(appView.board.board, black)
+  whitesTurn = true
+
+  main = ->
+    move = if whitesTurn then player.move() else player2.move()
+    whitesTurn = not whitesTurn
+    move.take()
+    setTimeout(main, 2000)
+
+  main()
 
 
-  new AppView()
+

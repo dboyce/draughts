@@ -20,6 +20,7 @@ white = Colour::WHITE
 
 class Piece extends KeyType
   constructor: (@colour, @board) ->
+    super()
     deltaI = if @colour is black then -1 else 1
     @vectors = [[deltaI, -1], [deltaI, 1]]
     @board.pieces[@colour].push(@)
@@ -54,6 +55,7 @@ class DraughtsBoard
     @pieces = {}
     @pieces[white] = []
     @pieces[black] = []
+    @publish = true
 
     @squares = []
     for i in [0..7]
@@ -94,11 +96,17 @@ class DraughtsBoard
     index = @pieces[piece.colour].indexOf(piece)
     @pieces[piece.colour].remove(index) if index is not -1
 
+    if @publish and @listener?
+      @listener.remove(piece)
+
   movePiece: (piece, square) ->
     throw "cannot move to #{square} as it contains #{square.piece}" if not square.isEmpty()
     piece.square.piece = null if piece.square? # remove piece from old square
     piece.square = square
     square.piece = piece
+
+    if @publish and @listener?
+      @listener.move(piece, square)
 
 
 
@@ -110,8 +118,10 @@ class ComputerPlayer
 
   move: ->
     try
-      @pickMove(@board.pieces[@colour], @board.pieces[@colour.flip], @colour, 0, false, 0)
+      @board.publish = false
+      ret = @pickMove(@board.pieces[@colour], @board.pieces[@colour.flip], @colour, 0, false, 0)
     finally
+      @board.publish = true
       @takenPieces = {}
 
   pickMove: (pieces, opponentPieces, colour, depth, hopping, score) ->
@@ -140,8 +150,6 @@ class ComputerPlayer
           toSquare.piece = null
           takenPiece.square = null
           piece.move(jumpTo)
-
-#          piece.take(takenPiece, jumpTo)
 
           if piece.isKinged()
             current = new Move(piece, fromSquare, toSquare, jumpTo, colour, score + takenPiece.value)
