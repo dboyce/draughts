@@ -37,13 +37,17 @@ $(document).ready ->
     move: (piece, to) ->
       @pieceViews[piece].move(to)
 
+      if piece.colour is white
+        @trigger('move')
+
     addPiece: (piece) ->
-      @pieceViews[piece] =  new PieceView(model:new PieceModel(piece:piece),appView:@appView)
+      view = new PieceView(model:new PieceModel(piece:piece),appView:@appView)
+      @pieceViews[piece] = view
 
     populate: ->
-
       @add(square:square,board:@) for square in row for row in [].concat(@board.squares).reverse()
       @board.initGame()
+
 
   class PieceView extends Backbone.View
 
@@ -58,6 +62,9 @@ $(document).ready ->
       @king = @piece instanceof King
       if @king
         $(@el).append("<div class='king'>K</div>")
+      $(@el).data('piece', @)
+
+
 
     remove: ->
       $(@el).remove()
@@ -66,6 +73,7 @@ $(document).ready ->
       $(@el).detach()
       @square = square
       @appView.getSquareView(@square.row ,@square.col).setPiece(@)
+
 
   class SquareView extends Backbone.View
     tagName: "div"
@@ -100,6 +108,15 @@ $(document).ready ->
       @row = $("<div class='row'></div>").appendTo($(@el)) if @squareCount++ % 8 is 0
       view = new SquareView(model:model)
       $(@row).append(view.render().el)
+      dragDrop.addDropTarget(view.el, (el) =>
+        pieceView = $(el).data('piece')
+        throw "couldn't locate piece for: #{el}" unless pieceView?
+        if pieceView.piece.canMoveTo(model.square)
+          @board.board.movePiece(pieceView.piece, model.square)
+          return true
+        else
+          return false
+      )
 
       square = model.square
       row = @squareViews[square.row]
@@ -112,18 +129,22 @@ $(document).ready ->
       @squareViews[row]?[col]
 
 
+  dragDrop = new DragNDropManager()
   appView = new AppView()
-  player = new ComputerPlayer(appView.board.board, white)
-  player2 = new ComputerPlayer(appView.board.board, black)
-  whitesTurn = true
 
-  main = ->
-    move = if whitesTurn then player.move() else player2.move()
-    whitesTurn = not whitesTurn
-    move.take()
-    setTimeout(main, 2000)
+  for piece in appView.board.board.pieces[white] when piece?
+    dragDrop.addDraggable(appView.board.pieceViews[piece].el)
 
-  main()
+  computer = new ComputerPlayer(appView.board.board, black)
+
+  appView.board.on('move', ->
+      try
+        dragDrop.dragDisabled = true
+        computer.move().take()
+      finally
+        dragDrop.dragDisabled = false
+  )
+
 
 
 
