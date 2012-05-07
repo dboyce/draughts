@@ -36,20 +36,21 @@ class Piece extends KeyType
     @board.removePiece(piece)
     @move(jumpTo)
 
-  canMoveTo: (square) ->
+  getMove: (square) ->
     return false unless square? and square.isEmpty()
     colDelta = square.col - @square.col
     rowDelta = square.row - @square.row
     if Math.abs(colDelta) == 2 and Math.abs(rowDelta) == 2
       hopped = @board.getSquare(@square.row + rowDelta / 2, @square.col + colDelta / 2)
       if hopped? and not hopped.isEmpty() and hopped.piece.colour is @colour.flip()
-        return @ instanceof King or rowDelta / 2 == @vectors[0][0]
-      else
-        return false
+        if @ instanceof King or rowDelta / 2 == @vectors[0][0]
+          ret = new Move(@, @square, square, 1)
+          ret.hops.push(hopped)
+          return ret
     else if Math.abs(colDelta) == 1 and Math.abs(rowDelta) == 1
-      return @ instanceof King or rowDelta == @vectors[0][0]
-    else
-      return false
+      if @ instanceof King or rowDelta == @vectors[0][0]
+        return new Move(@, @square, square, 0)
+    return null
 
 class King extends Piece
   constructor: (@colour, @board) ->

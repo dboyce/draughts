@@ -64,8 +64,6 @@ $(document).ready ->
         $(@el).append("<div class='king'>K</div>")
       $(@el).data('piece', @)
 
-
-
     remove: ->
       $(@el).remove()
 
@@ -111,8 +109,9 @@ $(document).ready ->
       dragDrop.addDropTarget(view.el, (el) =>
         pieceView = $(el).data('piece')
         throw "couldn't locate piece for: #{el}" unless pieceView?
-        if pieceView.piece.canMoveTo(model.square)
-          @board.board.movePiece(pieceView.piece, model.square)
+        move = pieceView.piece.getMove(model.square)
+        if move?
+          move.take()
           return true
         else
           return false
