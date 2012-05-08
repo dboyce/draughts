@@ -37,7 +37,7 @@ class Piece extends KeyType
     @move(jumpTo)
 
   getMove: (square) ->
-    return false unless square? and square.isEmpty()
+    return null unless square? and square.isEmpty()
     colDelta = square.col - @square.col
     rowDelta = square.row - @square.row
     if Math.abs(colDelta) == 2 and Math.abs(rowDelta) == 2
@@ -133,7 +133,7 @@ class DraughtsBoard
 
 
 class ComputerPlayer
-  depth: 3
+  depth: 4
 
   constructor: (@board, @colour) ->
     @takenPieces = {}

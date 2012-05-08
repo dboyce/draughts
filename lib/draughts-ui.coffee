@@ -43,6 +43,8 @@ $(document).ready ->
     addPiece: (piece) ->
       view = new PieceView(model:new PieceModel(piece:piece),appView:@appView)
       @pieceViews[piece] = view
+      dragDrop.addDraggable(view.el) if piece.colour is white
+
 
     populate: ->
       @add(square:square,board:@) for square in row for row in [].concat(@board.squares).reverse()
@@ -54,14 +56,14 @@ $(document).ready ->
     tagName: 'div'
 
     attributes: ->
-      "class" : "piece #{@model.piece.colour.name.toLowerCase()} #{if @king then 'king' else ''}"
+      "class" : "piece #{@model.piece.colour.name.toLowerCase()} #{if @model.piece instanceof King then 'king' else ''}"
 
     initialize: ->
       @piece = @model.piece
       @appView = @options.appView
       @king = @piece instanceof King
       if @king
-        $(@el).append("<div class='king'>K</div>")
+        $(@el).append("K")
       $(@el).data('piece', @)
 
     remove: ->
@@ -131,8 +133,6 @@ $(document).ready ->
   dragDrop = new DragNDropManager()
   appView = new AppView()
 
-  for piece in appView.board.board.pieces[white] when piece?
-    dragDrop.addDraggable(appView.board.pieceViews[piece].el)
 
   computer = new ComputerPlayer(appView.board.board, black)
 
