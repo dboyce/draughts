@@ -66,8 +66,11 @@ class Square
 
   isEmpty: -> not @piece?
 
+  toString: ->
+    "#{'abcdefgh'[@col]},#{@row}"
+
 class DraughtsBoard
-  constructor: ->
+  constructor: (factory)->
     @pieces = {}
     @pieces[white] = []
     @pieces[black] = []
@@ -79,6 +82,19 @@ class DraughtsBoard
       @squares.push(row)
       for j in [0..7]
         row.push new Square(i,j, if i % 2 == j % 2 then black else white)
+
+    if factory?
+      board = @
+      cols = {}
+      cols[name] = i for name,i in 'abcdefgh'.split('')
+
+      factory.call({
+          black: (args...) ->
+            new Piece(black, board).move(board.getSquare(args[i + 1], args[i])) for col, i in args by 2
+        white: (args...) ->
+            new Piece(white, board).move(board.getSquare(args[i + 1], args[i])) for col, i in args by 2
+        }, cols
+      )
 
   initGame: ->
     @pieces[white] = []
@@ -110,7 +126,6 @@ class DraughtsBoard
     @pieces[piece.colour].push(piece)
     if @publish and @listener
       @listener.addPiece(piece)
-
 
   removePiece: (piece) ->
     piece.square.piece = null if piece.square?
@@ -174,13 +189,13 @@ class ComputerPlayer
           piece.move(jumpTo)
 
           if piece.isKinged()
-            current = new Move(piece, fromSquare, toSquare, jumpTo, colour, score + takenPiece.value)
+            current = new Move(piece, fromSquare, jumpTo, score + takenPiece.value)
             if depth < @depth
               counterMove = @pickMove(@board.pieces[colour.flip()], @board.pieces[colour],
                 colour.flip(), depth + 1, false, 0)
               current.score -= counterMove.score if counterMove?
           else
-            current = @pickMove([piece], opponentPieces, colour.flip(), depth, true, score + takenPiece.value)
+            current = @pickMove([piece], opponentPieces, colour, depth, true, score + takenPiece.value)
             (current = new Move(piece, fromSquare, jumpTo, score + takenPiece.value)) unless current?
 
           if current.hops.length is 0
@@ -207,6 +222,8 @@ class ComputerPlayer
             current.score -= counterMove.score if counterMove?
 
             piece.move(fromSquare)
+
+#        console.log("#{colour} scored move: #{current}: \"#{current.score}\"") if depth is 0
 
         bestMove = current if current?.betterThan(bestMove)
 
@@ -235,7 +252,14 @@ class Move
 
 
   betterThan: (move)->
-    not move? or move.score < @score
+    not move? or move.score < @score and (not move.takesPieces or @takesPieces())
+
+  takesPieces: ->
+    @hops.length != 0
+
+  toString: ->
+    "#{@from} #{@hops.join(' ')} #{@to}"
+
 
 api =
   Colour: Colour
