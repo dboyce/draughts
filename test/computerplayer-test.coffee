@@ -12,9 +12,11 @@ describe "#ComputerPlayer", ->
     it "always take a piece if we can", ->
 
       board = new draughts.DraughtsBoard((_) ->
-          @black _.b, 3, _.a, 6, _.a, 2
+          @black _.b, 5, _.a, 6, _.a, 2
           @white _.b, 1
       )
+
+      console.log(board.toString())
 
       player = new draughts.ComputerPlayer(board, black)
       player.move().toString().should.equal("a,2 b,1 c,0")

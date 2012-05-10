@@ -252,7 +252,8 @@ class Move
 
 
   betterThan: (move)->
-    not move? or move.score < @score and (not move.takesPieces or @takesPieces())
+    testPieceTaking = move? and (not move.takesPieces() or @takesPieces())
+    not move? or testPieceTaking and (move.score < @score or move.score == @score and Math.random() > 0.5)
 
   takesPieces: ->
     @hops.length != 0
